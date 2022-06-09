@@ -22,17 +22,65 @@ class ContactController {
     response.json(contact);
   }
 
-  store() {
+  async store(request, response) {
     // criar novo registro
+    const {
+      name, email, phone, category_id,
+    } = request.body;
+
+    if (!name) {
+      return response.status(400).json({ error: 'Name is required' });
+    }
+
+    const contactsExists = await ContactsRepository.findByEmail(email);
+
+    if (contactsExists) {
+      return response.status(400).json({ error: 'This e-mail is already in use ' });
+    }
+
+    const contact = await ContactsRepository.create({
+      name, email, phone, category_id,
+    });
+
+    response.json(contact);
   }
 
-  update() {
+  async update(request, response) {
     // atualizar um registro
+    const { id } = request.params;
+
+    const {
+      name, email, phone, category_id,
+    } = request.body;
+
+    const contactExists = await ContactsRepository.findById(id);
+
+    if (!contactExists) {
+      return response.status(404).json({ error: 'Contact not found' });
+    }
+
+    if (!name) {
+      return response.status(400).json({ error: 'Name is required' });
+    }
+
+    const emailExists = await ContactsRepository.findByEmail(email);
+
+    if (emailExists && emailExists.id !== id) {
+      return response.status(400).json({ error: 'This e-mail is already in use ' });
+    }
+
+    const contact = await ContactsRepository.update(id, {
+      name, email, phone, category_id,
+    });
+    response.json(contact);
   }
 
   async delete(request, response) {
     // deletar um registro
     const { id } = request.params;
+    const {
+      name, email, phone, category_id,
+    } = request.body;
 
     const deletedContact = await ContactsRepository.findById(id);
 
@@ -40,7 +88,9 @@ class ContactController {
       return response.status(404).json({ error: 'Contact not found' });
     }
 
-    await ContactsRepository.delete(id);
+    await ContactsRepository.delete({
+      name, email, phone, category_id,
+    });
     // 204: no content
     response.sendStatus(204);
   }
