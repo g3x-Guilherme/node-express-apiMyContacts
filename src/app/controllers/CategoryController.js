@@ -40,8 +40,20 @@ class CategoryController {
     response.json(category);
   }
 
-  update(request, response) {
-    response.json({ message: 'update' });
+  async update(request, response) {
+    const { id } = request.params;
+    const { name } = request.body;
+
+    const category = await CategoriesRepository.findById(id);
+
+    if (!category) {
+      // 404 not found
+      return response.status(404).json({ error: 'Contact not found' });
+    }
+
+    const updatedCategory = await CategoriesRepository.update({ name, id });
+
+    response.json(updatedCategory);
   }
 }
 
